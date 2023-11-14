@@ -23,13 +23,14 @@ import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/utils/constants/constants.dart';
 import 'package:chatview/src/widgets/chat_view_inherited_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:swipeable_tile/swipeable_tile.dart';
 
 import '../../chatview.dart';
 import 'message_time_widget.dart';
 import 'message_view.dart';
 import 'profile_circle.dart';
 import 'reply_message_widget.dart';
-import 'swipe_to_reply.dart';
 
 class ChatBubbleWidget extends StatefulWidget {
   const ChatBubbleWidget({
@@ -153,89 +154,120 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
   }
 
   Widget _chatBubbleWidget(ChatUser? messagedUser) {
-    return Container(
-      padding:
-          widget.chatBubbleConfig?.padding ?? const EdgeInsets.only(left: 5.0),
-      margin:
-          widget.chatBubbleConfig?.margin ?? const EdgeInsets.only(bottom: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment:
-            isMessageBySender ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMessageBySender &&
-              (featureActiveConfig?.enableOtherUserProfileAvatar ?? true))
-            ProfileCircle(
-              bottomPadding: widget.message.reaction.reactions.isNotEmpty
-                  ? profileCircleConfig?.bottomPadding ?? 15
-                  : profileCircleConfig?.bottomPadding ?? 2,
-              profileCirclePadding: profileCircleConfig?.padding,
-              imageUrl: messagedUser?.profilePhoto,
-              circleRadius: profileCircleConfig?.circleRadius,
-              onTap: () => _onAvatarTap(messagedUser),
-              onLongPress: () => _onAvatarLongPress(messagedUser),
-            ),
-          Expanded(
-            child: isMessageBySender
-                ? SwipeToReply(
-                    onLeftSwipe: featureActiveConfig?.enableSwipeToReply ?? true
-                        ? () {
-                            if (maxDuration != null) {
-                              widget.message.voiceMessageDuration =
-                                  Duration(milliseconds: maxDuration!);
-                            }
-                            if (widget.swipeToReplyConfig?.onLeftSwipe !=
-                                null) {
-                              widget.swipeToReplyConfig?.onLeftSwipe!(
-                                  widget.message.message,
-                                  widget.message.sendBy);
-                            }
-                            widget.onSwipe(widget.message);
-                          }
-                        : null,
-                    replyIconColor: widget.swipeToReplyConfig?.replyIconColor,
-                    swipeToReplyAnimationDuration:
-                        widget.swipeToReplyConfig?.animationDuration,
-                    child: _messagesWidgetColumn(messagedUser),
+    return SwipeableTile.swipeToTrigger(
+      behavior: HitTestBehavior.translucent,
+      isElevated: false,
+      color: Colors.transparent,
+      swipeThreshold: 0.2,
+      direction: SwipeDirection.startToEnd,
+      onSwiped: (_) {
+        // _focusNode.requestFocus();
+        // setState(() {
+        //   _selectedPerson = person;
+        // });
+
+        if (featureActiveConfig?.enableSwipeToReply ?? true) {
+          if (maxDuration != null) {
+            widget.message.voiceMessageDuration =
+                Duration(milliseconds: maxDuration!);
+          }
+          if (widget.swipeToReplyConfig?.onLeftSwipe != null) {
+            widget.swipeToReplyConfig?.onLeftSwipe!(
+                widget.message.message, widget.message.sendBy);
+          }
+          widget.onSwipe(widget.message);
+        }
+      },
+      backgroundBuilder: (
+        _,
+        SwipeDirection direction,
+        AnimationController progress,
+      ) {
+        bool vibrated = false;
+
+        return AnimatedBuilder(
+          animation: progress,
+          builder: (_, __) {
+            if (progress.value > 0.9999 && !vibrated) {
+              HapticFeedback.mediumImpact();
+              vibrated = true;
+            } else if (progress.value < 0.9999) {
+              vibrated = false;
+            }
+            return Container(
+              alignment: AlignmentDirectional.centerStart,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 16.0),
+                child: Transform.scale(
+                  scale: Tween<double>(
+                    begin: 0.0,
+                    end: 1.2,
                   )
-                : SwipeToReply(
-                    onRightSwipe:
-                        featureActiveConfig?.enableSwipeToReply ?? true
-                            ? () {
-                                if (maxDuration != null) {
-                                  widget.message.voiceMessageDuration =
-                                      Duration(milliseconds: maxDuration!);
-                                }
-                                if (widget.swipeToReplyConfig?.onRightSwipe !=
-                                    null) {
-                                  widget.swipeToReplyConfig?.onRightSwipe!(
-                                      widget.message.message,
-                                      widget.message.sendBy);
-                                }
-                                widget.onSwipe(widget.message);
-                              }
-                            : null,
-                    replyIconColor: widget.swipeToReplyConfig?.replyIconColor,
-                    swipeToReplyAnimationDuration:
-                        widget.swipeToReplyConfig?.animationDuration,
-                    child: _messagesWidgetColumn(messagedUser),
+                      .animate(
+                        CurvedAnimation(
+                          parent: progress,
+                          curve: const Interval(0.5, 1.0, curve: Curves.linear),
+                        ),
+                      )
+                      .value,
+                  child: Icon(
+                    Icons.reply,
+                    color: Colors.white.withOpacity(0.75),
                   ),
-          ),
-          if (isMessageBySender) ...[getReciept()],
-          if (isMessageBySender &&
-              (featureActiveConfig?.enableCurrentUserProfileAvatar ?? true))
-            ProfileCircle(
-              bottomPadding: widget.message.reaction.reactions.isNotEmpty
-                  ? profileCircleConfig?.bottomPadding ?? 15
-                  : profileCircleConfig?.bottomPadding ?? 2,
-              profileCirclePadding: profileCircleConfig?.padding,
-              imageUrl: currentUser?.profilePhoto,
-              circleRadius: profileCircleConfig?.circleRadius,
-              onTap: () => _onAvatarTap(messagedUser),
-              onLongPress: () => _onAvatarLongPress(messagedUser),
+                ),
+              ),
+            );
+          },
+        );
+      },
+      key: UniqueKey(),
+      child: Container(
+        padding: widget.chatBubbleConfig?.padding ??
+            const EdgeInsets.only(left: 5.0),
+        margin: widget.chatBubbleConfig?.margin ??
+            const EdgeInsets.only(bottom: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: isMessageBySender
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!isMessageBySender &&
+                (featureActiveConfig?.enableOtherUserProfileAvatar ?? true))
+              ProfileCircle(
+                bottomPadding: widget.message.reaction.reactions.isNotEmpty
+                    ? profileCircleConfig?.bottomPadding ?? 15
+                    : profileCircleConfig?.bottomPadding ?? 2,
+                profileCirclePadding: profileCircleConfig?.padding,
+                imageUrl: messagedUser?.profilePhoto,
+                circleRadius: profileCircleConfig?.circleRadius,
+                onTap: () => _onAvatarTap(messagedUser),
+                onLongPress: () => _onAvatarLongPress(messagedUser),
+              ),
+            Expanded(
+              child: Align(
+                alignment: isMessageBySender
+                    ? AlignmentDirectional.centerEnd
+                    : AlignmentDirectional.centerStart,
+                child: _messagesWidgetColumn(messagedUser),
+              ),
             ),
-        ],
+            if (isMessageBySender) ...[getReciept()],
+            if (isMessageBySender &&
+                (featureActiveConfig?.enableCurrentUserProfileAvatar ?? true))
+              ProfileCircle(
+                bottomPadding: widget.message.reaction.reactions.isNotEmpty
+                    ? profileCircleConfig?.bottomPadding ?? 15
+                    : profileCircleConfig?.bottomPadding ?? 2,
+                profileCirclePadding: profileCircleConfig?.padding,
+                imageUrl: currentUser?.profilePhoto,
+                circleRadius: profileCircleConfig?.circleRadius,
+                onTap: () => _onAvatarTap(messagedUser),
+                onLongPress: () => _onAvatarLongPress(messagedUser),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -297,17 +329,17 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
       crossAxisAlignment:
           isMessageBySender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        if ((chatController?.chatUsers.length ?? 0) > 1 && !isMessageBySender)
-          Padding(
-            padding:
-                widget.chatBubbleConfig?.inComingChatBubbleConfig?.padding ??
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Text(
-              messagedUser?.name ?? '',
-              style: widget.chatBubbleConfig?.inComingChatBubbleConfig
-                  ?.senderNameTextStyle,
-            ),
-          ),
+        // if ((chatController?.chatUsers.length ?? 0) > 1 && !isMessageBySender)
+        //   Padding(
+        //     padding:
+        //         widget.chatBubbleConfig?.inComingChatBubbleConfig?.padding ??
+        //             const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        //     child: Text(
+        //       messagedUser?.name ?? '',
+        //       style: widget.chatBubbleConfig?.inComingChatBubbleConfig
+        //           ?.senderNameTextStyle,
+        //     ),
+        //   ),
         if (replyMessage.isNotEmpty)
           widget.repliedMessageConfig?.repliedMessageWidgetBuilder != null
               ? widget.repliedMessageConfig!

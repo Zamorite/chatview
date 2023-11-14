@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 import 'dart:io' if (kIsWeb) 'dart:html';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../values/typedefs.dart';
@@ -86,6 +86,7 @@ class ChatViewAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
+      color: Colors.transparent,
       elevation: elevation ?? 1,
       child: Container(
         padding: padding ??
@@ -95,6 +96,9 @@ class ChatViewAppBar extends StatelessWidget {
             ),
         color: backGroundColor ?? Colors.white,
         child: Row(
+          mainAxisAlignment: (!showLeading && actions == null)
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
           children: [
             if (showLeading)
               leading ??
@@ -107,36 +111,34 @@ class ChatViewAppBar extends StatelessWidget {
                       color: backArrowColor,
                     ),
                   ),
-            Expanded(
-              child: Row(
-                children: [
-                  if (profilePicture != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: CircleAvatar(
-                          backgroundImage: NetworkImage(profilePicture!)),
-                    ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        chatTitle,
-                        style: chatTitleTextStyle ??
-                            const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.25,
-                            ),
-                      ),
-                      if (userStatus != null)
-                        Text(
-                          userStatus!,
-                          style: userStatusTextStyle,
-                        ),
-                    ],
+            Row(
+              children: [
+                if (profilePicture != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: CircleAvatar(
+                        backgroundImage: NetworkImage(profilePicture!)),
                   ),
-                ],
-              ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      chatTitle,
+                      style: chatTitleTextStyle ??
+                          const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.25,
+                          ),
+                    ),
+                    if (userStatus != null)
+                      Text(
+                        userStatus!,
+                        style: userStatusTextStyle,
+                      ),
+                  ],
+                ),
+              ],
             ),
             if (actions != null) ...actions!,
           ],

@@ -106,55 +106,61 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
           )
         : Align(
             alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              child: Stack(
-                children: [
-                  Positioned(
-                    right: 0,
-                    left: 0,
-                    bottom: 0,
-                    child: Container(
-                      height: MediaQuery.of(context).size.height /
-                          ((!kIsWeb && Platform.isIOS) ? 24 : 28),
-                      color: widget.backgroundColor ?? Colors.white,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      bottomPadding4,
-                      bottomPadding4,
-                      bottomPadding4,
-                      _bottomPadding,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        ValueListenableBuilder<ReplyMessage>(
+            child: Container(
+              color: Colors.black.withOpacity(0.75),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Stack(
+                  children: [
+                    // Positioned(
+                    //   right: 0,
+                    //   left: 0,
+                    //   bottom: 0,
+                    //   child: Container(
+                    //     height: MediaQuery.of(context).size.height /
+                    //         ((!kIsWeb && Platform.isIOS) ? 24 : 28),
+                    //     color: Colors.red,
+                    //   ),
+                    // ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        bottomPadding4,
+                        bottomPadding4,
+                        bottomPadding4,
+                        _bottomPadding,
+                      ),
+                      child: ChatUITextField(
+                        focusNode: _focusNode,
+                        textEditingController: _textEditingController,
+                        onPressed: _onPressed,
+                        sendMessageConfig: widget.sendMessageConfig,
+                        onRecordingComplete: _onRecordingComplete,
+                        onImageSelected: _onImageSelected,
+                        replyBuilder: ValueListenableBuilder<ReplyMessage>(
                           builder: (_, state, child) {
                             if (state.message.isNotEmpty) {
                               return Container(
-                                decoration: BoxDecoration(
-                                  color: widget.sendMessageConfig
-                                          ?.textFieldBackgroundColor ??
-                                      Colors.white,
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(14),
-                                  ),
-                                ),
-                                margin: const EdgeInsets.only(
-                                  bottom: 17,
-                                  right: 0.4,
-                                  left: 0.4,
-                                ),
+                                // decoration: BoxDecoration(
+                                //   color: widget.sendMessageConfig
+                                //           ?.textFieldBackgroundColor ??
+                                //       Colors.white,
+                                //   borderRadius: const BorderRadius.vertical(
+                                //     top: Radius.circular(14),
+                                //   ),
+                                // ),
+                                // margin: const EdgeInsets.only(
+                                //   bottom: 17,
+                                //   right: 0.4,
+                                //   left: 0.4,
+                                // ),
                                 padding: const EdgeInsets.fromLTRB(
-                                  leftPadding,
-                                  leftPadding,
-                                  leftPadding,
-                                  30,
+                                  0,
+                                  6,
+                                  0,
+                                  0,
                                 ),
                                 child: Container(
-                                  margin: const EdgeInsets.only(bottom: 2),
+                                  // margin: const EdgeInsets.only(bottom: 2),
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 4,
                                     horizontal: 6,
@@ -163,57 +169,76 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                                     color: widget.sendMessageConfig
                                             ?.replyDialogColor ??
                                         Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                        textFieldBorderRadius),
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
+                                  child: Row(
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            replyTitle,
-                                            style: TextStyle(
-                                              color: widget.sendMessageConfig
-                                                      ?.replyTitleColor ??
-                                                  Colors.deepPurple,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.25,
-                                            ),
+                                      Expanded(
+                                        child: Container(
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                            10,
+                                            10,
+                                            0,
+                                            10,
                                           ),
-                                          IconButton(
-                                            constraints: const BoxConstraints(),
-                                            padding: EdgeInsets.zero,
-                                            icon: Icon(
-                                              Icons.close,
-                                              color: widget.sendMessageConfig
-                                                      ?.closeIconColor ??
-                                                  Colors.black,
-                                              size: 16,
-                                            ),
-                                            onPressed: _onCloseTap,
-                                          ),
-                                        ],
-                                      ),
-                                      if (state.messageType.isVoice)
-                                        _voiceReplyMessageView
-                                      else if (state.messageType.isImage)
-                                        _imageReplyMessageView
-                                      else
-                                        Text(
-                                          state.message,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: widget.sendMessageConfig
-                                                    ?.replyMessageColor ??
-                                                Colors.black,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    EdgeInsetsDirectional.only(
+                                                        bottom: 10),
+                                                child: Text(
+                                                  replyTitle,
+                                                  style: TextStyle(
+                                                    color: widget
+                                                            .sendMessageConfig
+                                                            ?.replyTitleColor ??
+                                                        Colors.deepPurple,
+                                                    fontWeight: FontWeight.bold,
+                                                    letterSpacing: 0.25,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (state.messageType.isVoice)
+                                                _voiceReplyMessageView
+                                              else if (state
+                                                  .messageType.isImage)
+                                                _imageReplyMessageView
+                                              else
+                                                Text(
+                                                  state.message,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: widget
+                                                            .sendMessageConfig
+                                                            ?.replyMessageColor ??
+                                                        Colors.black,
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         ),
+                                      ),
+                                      IconButton(
+                                        constraints: const BoxConstraints(),
+                                        padding: EdgeInsets.zero,
+                                        icon: Icon(
+                                          Icons.close,
+                                          color: widget.sendMessageConfig
+                                                  ?.closeIconColor ??
+                                              Colors.black,
+                                          size: 16,
+                                        ),
+                                        onPressed: _onCloseTap,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -224,18 +249,10 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                           },
                           valueListenable: _replyMessage,
                         ),
-                        ChatUITextField(
-                          focusNode: _focusNode,
-                          textEditingController: _textEditingController,
-                          onPressed: _onPressed,
-                          sendMessageConfig: widget.sendMessageConfig,
-                          onRecordingComplete: _onRecordingComplete,
-                          onImageSelected: _onImageSelected,
-                        )
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -244,9 +261,12 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
   Widget get _voiceReplyMessageView {
     return Row(
       children: [
-        Icon(
-          Icons.mic,
-          color: widget.sendMessageConfig?.micIconColor,
+        Container(
+          padding: EdgeInsetsDirectional.only(end: 10),
+          child: Icon(
+            Icons.mic,
+            color: widget.sendMessageConfig?.micIconColor,
+          ),
         ),
         const SizedBox(width: 4),
         if (replyMessage.voiceMessageDuration != null)
@@ -265,11 +285,14 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
   Widget get _imageReplyMessageView {
     return Row(
       children: [
-        Icon(
-          Icons.photo,
-          size: 20,
-          color: widget.sendMessageConfig?.replyMessageColor ??
-              Colors.grey.shade700,
+        Container(
+          padding: EdgeInsetsDirectional.only(end: 10),
+          child: Icon(
+            Icons.photo,
+            size: 20,
+            color: widget.sendMessageConfig?.replyMessageColor ??
+                Colors.grey.shade700,
+          ),
         ),
         Text(
           PackageStrings.photo,
